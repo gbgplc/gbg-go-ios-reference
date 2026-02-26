@@ -1,0 +1,28 @@
+# Xcode
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+xcuserdata/
+build/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/GBGBridge/.build/
+
+# Node.js
+node_modules/
+server/node_modules/
+
+# Environment
+.env
+.env.local
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# IDE
+.idea/
+.vscode/

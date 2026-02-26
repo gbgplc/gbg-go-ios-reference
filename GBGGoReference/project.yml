@@ -1,0 +1,45 @@
+name: GBGGoReference
+options:
+  bundleIdPrefix: com.gbg.go.reference
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.2"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: ""
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+
+packages:
+  GBGBridge:
+    path: ../Packages/GBGBridge
+
+targets:
+  GBGGoReference:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    dependencies:
+      - package: GBGBridge
+    settings:
+      base:
+        INFOPLIST_FILE: Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+    info:
+      path: Resources/Info.plist
+      properties:
+        CFBundleDisplayName: GBG Go Reference
+        CFBundleName: GBGGoReference
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSCameraUsageDescription: "Camera access is needed to capture identity documents and selfie photos for verification."
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
