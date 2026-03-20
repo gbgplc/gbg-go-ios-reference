@@ -43,7 +43,7 @@ public final class CapabilityQueryHandler: BridgeCapabilityHandler, @unchecked S
         let (id, info) = entry
         var capObj: [String: JSONValue] = [
           "supported": .bool(info.supported),
-          "version": info.version.map { .string($0) } ?? .null,
+          "version": info.version.map { .string($0) } ?? .null
         ]
         if let permissionState = info.permissionState {
           capObj["permissionState"] = .string(permissionState)
@@ -56,7 +56,7 @@ public final class CapabilityQueryHandler: BridgeCapabilityHandler, @unchecked S
         let (id, enabled) = entry
         result[id] = .object([
           "supported": .bool(enabled),
-          "version": enabled ? .string("1.0") : .null,
+          "version": enabled ? .string("1.0") : .null
         ])
       }
     } else {
@@ -68,7 +68,7 @@ public final class CapabilityQueryHandler: BridgeCapabilityHandler, @unchecked S
       data: [
         "environment": .string("ios"),
         "hostVersion": .string(hostVersion),
-        "capabilities": .object(capabilitiesPayload),
+        "capabilities": .object(capabilitiesPayload)
       ],
       error: nil
     )

@@ -56,6 +56,19 @@ public struct BridgeMessage: Codable, Identifiable, Sendable {
   }
 }
 
+/// Options that may accompany a request payload.
+public struct BridgeRequestOptions: Codable, Sendable {
+  /// Request timeout in milliseconds.
+  public let timeout: Double?
+  /// Whether the host can decline in favour of a web fallback.
+  public let fallbackAllowed: Bool?
+
+  public init(timeout: Double? = nil, fallbackAllowed: Bool? = nil) {
+    self.timeout = timeout
+    self.fallbackAllowed = fallbackAllowed
+  }
+}
+
 /// The payload of a bridge message, carrying the action and associated data.
 public struct BridgePayload: Codable, Sendable {
   /// The action identifier (e.g. `"camera.document.capture"`, `"capability.query"`).
@@ -66,12 +79,21 @@ public struct BridgePayload: Codable, Sendable {
   public let status: BridgeResponseStatus?
   /// A structured error payload, present only when status is `.error` or `.cancelled`.
   public let error: BridgeErrorPayload?
+  /// Optional request options (present only in request messages).
+  public let options: BridgeRequestOptions?
 
-  public init(action: String, data: [String: JSONValue]?, status: BridgeResponseStatus?, error: BridgeErrorPayload?) {
+  public init(
+    action: String,
+    data: [String: JSONValue]?,
+    status: BridgeResponseStatus?,
+    error: BridgeErrorPayload?,
+    options: BridgeRequestOptions? = nil
+  ) {
     self.action = action
     self.data = data
     self.status = status
     self.error = error
+    self.options = options
   }
 }
 

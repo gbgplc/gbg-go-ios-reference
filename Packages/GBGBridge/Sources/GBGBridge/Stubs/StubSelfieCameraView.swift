@@ -1,12 +1,15 @@
 import SwiftUI
 import UIKit
 
-/// A stub selfie capture view that uses `UIImagePickerController` with the front camera
-/// to take a photo or select from the photo library.
+/// A stub selfie capture view for development and early integration.
 ///
-/// Use this view during development and early integration to prove the bridge works
-/// end-to-end without requiring the face liveness SDK. Replace it with the real
-/// SDK-backed view before shipping to production.
+/// On a real device this presents `UIImagePickerController` with the front camera.
+/// On the iOS Simulator — where camera hardware is unavailable — it automatically
+/// shows a static face silhouette with a shutter-style capture button, so you can
+/// exercise the full bridge flow without a physical device.
+///
+/// Replace this view with the real face liveness SDK view before shipping
+/// to production.
 ///
 /// - Important: This view captures a standard selfie. It does **not** perform
 ///   liveness detection, face mesh analysis, or biometric encryption. The
@@ -46,6 +49,12 @@ public struct StubSelfieCameraView: View {
   }
 
   public var body: some View {
+    #if targetEnvironment(simulator)
+    SimulatorSelfieCaptureView(
+      onCaptured: onCaptured,
+      onCancelled: onCancelled
+    )
+    #else
     StubImagePicker(
       sourceType: UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary,
       cameraDevice: .front,
@@ -58,6 +67,7 @@ public struct StubSelfieCameraView: View {
       },
       onCancelled: onCancelled
     )
+    #endif
   }
 
   private static func makeResult(from image: UIImage) -> SelfieCaptureResult? {

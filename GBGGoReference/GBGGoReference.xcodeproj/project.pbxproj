@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -21,7 +21,7 @@
 		6BA02E784C58D850494D1EC8 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		C61C0E75DAA320C2B056E00B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		CA78C84476BB13006B96F6C8 /* GBGGoReferenceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GBGGoReferenceApp.swift; sourceTree = "<group>"; };
-		D170D6F7EC9CBCA151497733 /* GBGGoReference.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GBGGoReference.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D170D6F7EC9CBCA151497733 /* GBGGoReference.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GBGGoReference.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F02DEA5B6E80155AC5890D6E /* GBGBridge */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GBGBridge; path = ../Packages/GBGBridge; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -146,7 +146,6 @@
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					1DC5F113E2A3183061EB556D = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -164,7 +163,6 @@
 			packageReferences = (
 				5F9EAAC09257DE0D23C2B4E2 /* XCLocalSwiftPackageReference "../Packages/GBGBridge" */,
 			);
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -320,6 +318,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -337,6 +336,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

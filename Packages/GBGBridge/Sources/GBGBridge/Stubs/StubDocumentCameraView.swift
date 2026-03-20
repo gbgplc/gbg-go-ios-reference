@@ -1,12 +1,15 @@
 import SwiftUI
 import UIKit
 
-/// A stub document capture view that uses `UIImagePickerController` to take a photo
-/// or select from the photo library.
+/// A stub document capture view for development and early integration.
 ///
-/// Use this view during development and early integration to prove the bridge works
-/// end-to-end without requiring the SmartCapture document SDK. Replace it with
-/// the real SDK-backed view before shipping to production.
+/// On a real device this presents `UIImagePickerController` with the rear camera.
+/// On the iOS Simulator — where camera hardware is unavailable — it automatically
+/// shows a static placeholder document image with a shutter-style capture button,
+/// so you can exercise the full bridge flow without a physical device.
+///
+/// Replace this view with the real SmartCapture document SDK view before shipping
+/// to production.
 ///
 /// - Important: This view captures a standard photo. It does **not** perform
 ///   document detection, auto-cropping, quality checks, or any of the processing
@@ -42,6 +45,12 @@ public struct StubDocumentCameraView: View {
   }
 
   public var body: some View {
+    #if targetEnvironment(simulator)
+    SimulatorDocumentCaptureView(
+      onCaptured: onCaptured,
+      onCancelled: onCancelled
+    )
+    #else
     StubImagePicker(
       sourceType: UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary,
       cameraDevice: .rear,
@@ -54,6 +63,7 @@ public struct StubDocumentCameraView: View {
       },
       onCancelled: onCancelled
     )
+    #endif
   }
 
   private static func makeResult(from image: UIImage) -> DocumentCaptureResult? {

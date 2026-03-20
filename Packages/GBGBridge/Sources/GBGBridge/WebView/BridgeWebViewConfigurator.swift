@@ -69,6 +69,7 @@ public struct BridgeWebViewConfigurator {
     host: BridgeHost
   ) -> WKWebView {
     let configuration = WKWebViewConfiguration()
+    configuration.allowsInlineMediaPlayback = true
     let webView = WKWebView(frame: .zero, configuration: configuration)
     configure(webView, host: host)
     return webView

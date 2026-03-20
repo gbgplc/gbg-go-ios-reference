@@ -12,7 +12,7 @@ import WebKit
 /// This class is `@MainActor`-isolated and conforms to `ObservableObject` so it can
 /// drive SwiftUI views directly.
 @MainActor
-open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
+public class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
   /// All messages received from the web layer, capped at the most recent 200 entries.
   @Published public var receivedMessages: [BridgeMessage] = []
   /// Incoming requests that have no registered handler and are awaiting manual resolution.
@@ -33,6 +33,8 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
     return encoder
   }()
   private let jsonDecoder = JSONDecoder()
+  /// The bridge protocol version included in all outbound messages.
+  public static let protocolVersion = "1.0"
   private static let maxReceivedMessages = 200
   private var handlers: [String: any BridgeCapabilityHandler] = [:]
   private weak var webView: WKWebView?
@@ -152,6 +154,12 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
   /// and breaking any remaining references. Call this when the WebView is being
   /// removed from the view hierarchy (e.g. in onDisappear or when navigating away).
   public func detach() {
+    // Cancel any in-progress capture requests to prevent leaked CheckedContinuations.
+    // cancelIfBusy() safely resumes the continuation with .cancelled and clears
+    // activeRequest. It is a no-op if no request is in flight.
+    documentCapture.cancelIfBusy(reason: "BridgeHost detached")
+    selfieCapture.cancelIfBusy(reason: "BridgeHost detached")
+
     webView?.configuration.userContentController.removeScriptMessageHandler(forName: "gbgBridge")
     webView?.configuration.userContentController.removeAllUserScripts()
     webView = nil
@@ -233,7 +241,10 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
     send(type: .response, correlationId: correlationId, payload: payload)
   }
 
-  public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+  public func userContentController(
+    _ userContentController: WKUserContentController,
+    didReceive message: WKScriptMessage
+  ) {
     guard message.name == "gbgBridge" else {
       return
     }
@@ -245,8 +256,9 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
     do {
       let bridgeMessage = try decodeEnvelope(body)
       receivedMessages.append(bridgeMessage)
+      // Trim to cap — use suffix to avoid O(n) removeFirst on Array.
       if receivedMessages.count > Self.maxReceivedMessages {
-        receivedMessages.removeFirst(receivedMessages.count - Self.maxReceivedMessages)
+        receivedMessages = Array(receivedMessages.suffix(Self.maxReceivedMessages))
       }
       delegate?.bridgeHost(self, didReceive: bridgeMessage)
       handleIncomingRequest(bridgeMessage)
@@ -305,10 +317,8 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
 
     // Typed slots override custom capabilities with the same id
     let typedSlots: [CaptureCapability] = [documentCapture, selfieCapture]
-    for slot in typedSlots {
-      if slot.handler != nil {
-        result[slot.id] = slot.buildCapabilityInfo()
-      }
+    for slot in typedSlots where slot.handler != nil {
+      result[slot.id] = slot.buildCapabilityInfo()
     }
 
     return result
@@ -323,7 +333,7 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
     }
 
     let envelope = BridgeMessage(
-      version: "1.0",
+      version: Self.protocolVersion,
       correlationId: correlationId,
       type: type,
       timestamp: Date().timeIntervalSince1970 * 1000,
@@ -339,14 +349,14 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
 
       // callAsyncJavaScript passes arguments safely without string interpolation.
       // The `json` argument is available as a local variable inside the JS body.
-      let js = """
+      let script = """
       if (window.GBGBridge && window.GBGBridge.receive) {
           window.GBGBridge.receive(JSON.parse(json));
       }
       """
 
       webView.callAsyncJavaScript(
-        js,
+        script,
         arguments: ["json": jsonString],
         in: nil,
         in: .page
@@ -376,72 +386,5 @@ open class BridgeHost: NSObject, ObservableObject, WKScriptMessageHandler {
     }
 
     throw NSError(domain: "BridgeHost", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unsupported message body type"])
-  }
-}
-
-// MARK: - Internal types
-
-private struct CustomCapabilityEntry {
-  let id: String
-  let version: String?
-  let handler: @Sendable (BridgeMessage, BridgeResponder) async -> Void
-}
-
-private final class CapabilityResponder: BridgeResponder, @unchecked Sendable {
-  private weak var host: BridgeHost?
-  private let correlationId: String
-  private let action: String
-
-  init(host: BridgeHost, correlationId: String, action: String) {
-    self.host = host
-    self.correlationId = correlationId
-    self.action = action
-  }
-
-  func respond(status: BridgeResponseStatus, data: [String: JSONValue]?, error: BridgeErrorPayload?) {
-    Task { @MainActor [weak host] in
-      guard let host else {
-        return
-      }
-      host.respond(
-        to: correlationId,
-        action: action,
-        status: status,
-        data: data,
-        error: error
-      )
-    }
-  }
-}
-
-/// Internal handler wrapper that routes requests to a typed CaptureCapability slot.
-private final class TypedSlotHandler: BridgeCapabilityHandler, @unchecked Sendable {
-  let action: String
-  private let slot: CaptureCapability
-
-  init(slot: CaptureCapability) {
-    self.action = slot.actionId
-    self.slot = slot
-  }
-
-  func handle(request: BridgeMessage, responder: BridgeResponder) async {
-    await MainActor.run {
-      slot.handleRequest(request, responder: responder)
-    }
-  }
-}
-
-/// Internal handler wrapper for custom capabilities registered via registerCustomCapability.
-private final class CustomCapabilityHandler: BridgeCapabilityHandler, @unchecked Sendable {
-  let action: String
-  private let handler: @Sendable (BridgeMessage, BridgeResponder) async -> Void
-
-  init(action: String, handler: @escaping @Sendable (BridgeMessage, BridgeResponder) async -> Void) {
-    self.action = action
-    self.handler = handler
-  }
-
-  func handle(request: BridgeMessage, responder: BridgeResponder) async {
-    await handler(request, responder)
   }
 }

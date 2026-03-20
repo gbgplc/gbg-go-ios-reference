@@ -6,8 +6,9 @@
  * server to obtain a journey URL, which it then loads in a BridgeWebView.
  *
  * Flow:
- *   1. On startup, the server authenticates with GBG Go using your credentials.
- *   2. POST /api/journey/start creates a new journey session and returns the URL.
+ *   1. On startup the server authenticates with GBG Go using your credentials.
+ *   2. POST /api/journey/start creates a new journey, registers a mobile
+ *      device, connects it, and returns the journey URL plus tokens.
  *   3. The iOS app receives the URL and loads it in its WKWebView.
  *
  * Usage:
@@ -20,12 +21,17 @@ import "dotenv/config";
 import express from "express";
 import { Go } from "@gbg/go-core";
 
-const app = express();
-app.use(express.json());
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
 
 const PORT = process.env.PORT || 3000;
 const SERVER_IDX = parseInt(process.env.GO_SERVER_IDX || "0", 10);
 const REGIONS = ["EU", "US", "AU"];
+const SERVER_URL = process.env.GO_SERVER_URL || undefined;
+
+const app = express();
+app.use(express.json());
 
 // ---------------------------------------------------------------------------
 // Authentication — generate an access token on startup
@@ -70,8 +76,7 @@ app.get("/health", (_req, res) => {
  *
  * Request body (all fields optional):
  *   {
- *     "resourceId": "a4c68509c24789888eb466@latest",
- *     "identity": { "firstName": "John", "lastNames": ["Doe"], ... }
+ *     "resourceId": "a4c68509c24789888eb466@latest"
  *   }
  *
  * Response:
@@ -90,33 +95,61 @@ app.post("/api/journey/start", async (req, res) => {
       });
     }
 
-    const go = new Go({
-      customerAccess: customerAccessToken,
-      serverIdx: SERVER_IDX,
-    });
+    const serverOpts = SERVER_URL ? { serverURL: SERVER_URL } : {};
+    const client = new Go({ customerAccess: customerAccessToken });
 
-    // Step 1: Start the journey
-    const journey = await go.journeys.start({
-      resourceId: req.body.resourceId ?? "a4c68509c24789888eb466@latest",
-      context: {
-        subject: {
-          identity: req.body.identity ?? {},
+    // Step 1: Start a journey session
+    const journey = await client.journeys.start(
+      {
+        resourceId: req.body.resourceId ?? process.env.GO_RESOURCE_ID,
+        context: {
+          subject: {},
+          config: { delivery: "page" },
         },
       },
-    });
+      serverOpts
+    );
 
-    // Step 2: Get a connect token for the mobile device
-    const device = await go.devices.add({
-      instanceId: journey.instanceId,
-      scope: ["mobile"],
-    });
+    // Step 2: Register a mobile device against the journey
+    const device = await client.devices.add(
+      {
+        instanceId: journey.instanceId,
+        scope: ["mobile"],
+      },
+      serverOpts
+    );
 
-    res.json({
+    // Step 3: Connect the device to obtain an end-user token
+    const connection = await client.devices.connect(
+      { deviceConnect: device.connectToken },
+      {
+        deviceInfo: {
+          deviceName: "iOS Reference App",
+          deviceId: "ios-reference-device",
+          deviceType: "mobile",
+        },
+        connectToken: device.connectToken,
+      },
+      serverOpts
+    );
+
+    // Step 4: Fetch the interaction to validate the session
+    const unauthenticatedClient = new Go();
+    await unauthenticatedClient.interactions.fetch(
+      { interactionAccess: String(connection.endUserToken) },
+      { instanceId: journey.instanceId },
+      serverOpts
+    );
+
+    // Return the journey details to the iOS app
+    const result = {
       instanceId: journey.instanceId,
       journeyUrl: journey.instanceUrl,
       connectToken: device.connectToken,
       expiresIn: device.expiresIn,
-    });
+    };
+    console.log("Journey started:", result.instanceId);
+    res.json(result);
   } catch (err) {
     console.error("Journey start failed:", err.message);
     res.status(500).json({

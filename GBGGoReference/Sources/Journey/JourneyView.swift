@@ -41,8 +41,19 @@ struct JourneyView: View {
         // TUTORIAL NOTE: BridgeWebView wraps WKWebView with the bridge pre-configured.
         // It injects the bootstrap script, registers the message handler, and attaches
         // the host — all automatically. You just provide the URL and host.
-        BridgeWebView(url: journeyURL, host: host)
-            .ignoresSafeArea()
+        ZStack(alignment: .bottom) {
+            BridgeWebView(url: journeyURL, host: host)
+                .ignoresSafeArea()
+
+            if let error = host.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(Color.red.cornerRadius(8))
+                    .padding()
+            }
+        }
             .navigationTitle("Journey")
             .navigationBarTitleDisplayMode(.inline)
             .onAppear(perform: configureHandlers)

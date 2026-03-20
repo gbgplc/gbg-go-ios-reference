@@ -12,19 +12,14 @@ import SwiftUI
 struct RootView: View {
     /// Navigation path controls the stack programmatically.
     @State private var navigationPath = NavigationPath()
-    /// Holds the journey URL after a successful server call.
-    @State private var journeyURL: URL?
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
             SetupView(onJourneyStarted: { url in
-                journeyURL = url
-                navigationPath.append("journey")
+                navigationPath.append(url)
             })
-            .navigationDestination(for: String.self) { route in
-                if route == "journey", let url = journeyURL {
-                    JourneyView(journeyURL: url)
-                }
+            .navigationDestination(for: URL.self) { url in
+                JourneyView(journeyURL: url)
             }
         }
     }

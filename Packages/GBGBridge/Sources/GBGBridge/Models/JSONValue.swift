@@ -5,7 +5,7 @@ import Foundation
 /// Use `JSONValue` to encode and decode heterogeneous JSON structures
 /// without losing type information. Each case maps to a JSON primitive
 /// or container type.
-public enum JSONValue: Codable, Sendable {
+public enum JSONValue: Codable, Sendable, Equatable {
   case string(String)
   case number(Double)
   case bool(Bool)

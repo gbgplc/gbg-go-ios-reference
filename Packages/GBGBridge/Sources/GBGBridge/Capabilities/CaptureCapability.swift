@@ -9,7 +9,7 @@ import Foundation
 ///
 /// This class is `@MainActor`-isolated and conforms to `ObservableObject` for SwiftUI binding.
 @MainActor
-public class CaptureCapability: ObservableObject {
+public final class CaptureCapability: ObservableObject {
   /// The capability identifier (e.g. `"camera.document"`, `"camera.selfie"`).
   public let id: String
   /// The action identifier that triggers this capability (e.g. `"camera.document.capture"`).
@@ -143,8 +143,8 @@ public class CaptureCapability: ObservableObject {
       } else {
         result = await captureHandler(request)
       }
-      let (status, data, error) = result.toBridgeResponse()
-      responder.respond(status: status, data: data, error: error)
+      let response = result.toBridgeResponse()
+      responder.respond(status: response.status, data: response.data, error: response.error)
       self.activeRequest = nil
     }
   }

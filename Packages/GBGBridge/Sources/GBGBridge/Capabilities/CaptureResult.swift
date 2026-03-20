@@ -63,17 +63,23 @@ public enum CaptureResult: Sendable {
   case failed(code: String, message: String, recoverable: Bool)
 }
 
+internal struct BridgeResponseResult {
+  let status: BridgeResponseStatus
+  let data: [String: JSONValue]?
+  let error: BridgeErrorPayload?
+}
+
 extension CaptureResult {
-  internal func toBridgeResponse() -> (BridgeResponseStatus, [String: JSONValue]?, BridgeErrorPayload?) {
+  internal func toBridgeResponse() -> BridgeResponseResult {
     switch self {
     case .document(let result):
       let data: [String: JSONValue] = [
         "imageBase64": .string(result.imageData.base64EncodedString()),
         "imageWidth": .number(Double(result.width)),
         "imageHeight": .number(Double(result.height)),
-        "mimeType": .string(result.mimeType),
+        "mimeType": .string(result.mimeType)
       ]
-      return (.success, data, nil)
+      return BridgeResponseResult(status: .success, data: data, error: nil)
 
     case .selfie(let result):
       let data: [String: JSONValue] = [
@@ -82,17 +88,17 @@ extension CaptureResult {
         "imageHeight": .number(Double(result.height)),
         "mimeType": .string(result.mimeType),
         "encryptedBlobBase64": .string(result.encryptedBlob.base64EncodedString()),
-        "unencryptedBlobBase64": .string(result.unencryptedBlob.base64EncodedString()),
+        "unencryptedBlobBase64": .string(result.unencryptedBlob.base64EncodedString())
       ]
-      return (.success, data, nil)
+      return BridgeResponseResult(status: .success, data: data, error: nil)
 
     case .cancelled(let reason):
       let error = BridgeErrorPayload(code: "CANCELLED", message: reason, recoverable: true)
-      return (.cancelled, nil, error)
+      return BridgeResponseResult(status: .cancelled, data: nil, error: error)
 
     case .failed(let code, let message, let recoverable):
       let error = BridgeErrorPayload(code: code, message: message, recoverable: recoverable)
-      return (.error, nil, error)
+      return BridgeResponseResult(status: .error, data: nil, error: error)
     }
   }
 }
