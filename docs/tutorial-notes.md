@@ -35,7 +35,7 @@ Internal notes for transforming this reference build into the end-to-end linear 
 
 1. **Simulator vs Device**: `http://localhost:3000` only works in the Simulator. On a device, use your Mac's IP address.
 2. **App Transport Security**: If you forget `NSAllowsLocalNetworking`, HTTP requests to the companion server will silently fail.
-3. **Camera on Simulator**: The Simulator has no camera — the stub views automatically fall back to the photo library. This is expected behaviour, not a bug.
+3. **Camera on Simulator**: The Simulator has no camera — the stub views automatically show programmatically-drawn placeholder images (a document card or face silhouette) with a shutter-style capture button. This is expected behaviour, not a bug.
 4. **Connect Token Expiry**: The connect token from the server is short-lived (~120 seconds). If the journey URL doesn't load in time, request a new one.
 5. **Handler Assignment Timing**: Assign handlers in `onAppear`, not in the initializer. The `@StateObject` host persists across re-renders, but `onAppear` is the SwiftUI-idiomatic place for setup.
 6. **Memory Leak Prevention**: Use `[weak host]` in handler closures. Without it, the closure captures a strong reference to the host, which captures the WebView, creating a retain cycle.
