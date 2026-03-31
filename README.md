@@ -1,12 +1,29 @@
-# GBG Go iOS Reference
+# GBG Go iOS Reference — Part 2: Smart Capture SDK Integration
 
-A complete, runnable reference integration of the GBG Go identity verification journey in an iOS app using the GBGBridge SDK.
+> **Branch:** `part-2-smart-capture` — builds on the [Part 1 reference](../../tree/main) (`main` branch) which covers core bridge integration with stub camera views.
+
+A complete, runnable reference integration of the GBG Go identity verification journey in an iOS app using the GBGBridge SDK **with real Smart Capture SDKs** for document scanning and face capture with liveness detection.
 
 This project demonstrates:
-- Obtaining a journey URL from your backend using the GBG Go Core SDK
-- Loading the journey in a `BridgeWebView` with the GBGBridge iOS SDK
-- Handling native capability requests (document capture, selfie capture) with stub camera views
-- The full communication flow between the web journey and native host
+- Everything from Part 1 (journey URL, BridgeWebView, bridge protocol, stub cameras)
+- **Replacing stub camera views with Smart Capture SDKs** using a compile-time flag
+- **Document scanning** with guided capture, auto-crop, and quality scoring (`Document.xcframework`)
+- **Face capture with liveness** detection and encrypted biometric blobs (`FaceCamera.xcframework`)
+- Conditional compilation so the app works with or without the SDKs
+- Simulator fallback to stubs (Smart Capture SDKs require camera hardware)
+
+## What Changed from Part 1
+
+The diff between `main` and this branch is intentionally small — the bridge architecture was designed so that swapping stubs for real SDKs is a minimal change:
+
+| File | Change |
+|------|--------|
+| `Sources/Capture/SmartCaptureDocumentView.swift` | New — thin wrapper around Document SDK |
+| `Sources/Capture/SmartCaptureFaceView.swift` | New — thin wrapper around FaceCamera SDK |
+| `Sources/Journey/JourneyView.swift` | Modified — conditional compile at the swap points |
+| `Frameworks/` | New — placeholder for Smart Capture SDK frameworks |
+
+The handler setup, bridge wiring, `awaitCompletion()`/`complete()` pattern, server code, and all other files are unchanged.
 
 ## Prerequisites
 
@@ -14,14 +31,16 @@ This project demonstrates:
 - **iOS 16.0+** device or simulator
 - **Node.js 18+** (for the companion server)
 - **GBG Go account** with API credentials (client ID, client secret, username, password)
+- **Smart Capture SDKs** (optional — obtained from your GBG account representative)
 
 ## Quick Start
 
-### 1. Clone the repository
+### 1. Clone and check out Part 2
 
 ```bash
 git clone https://github.com/gbgplc/gbg-go-ios-reference.git
 cd gbg-go-ios-reference
+git checkout part-2-smart-capture
 ```
 
 ### 2. Set up the companion server
@@ -46,9 +65,13 @@ node index.mjs
 open GBGGoReference/GBGGoReference.xcodeproj
 ```
 
-### 5. Build and run
+### 5. Build and run (stubs mode)
 
-Select an iOS Simulator (or device) and press **Cmd+R**. The app will launch with a settings screen where you can configure the companion server URL and start a journey.
+Select an iOS Simulator (or device) and press **Cmd+R**. Without the Smart Capture SDKs, the app uses stub camera views — identical to Part 1.
+
+### 6. Enable Smart Capture (optional)
+
+See [Enabling Smart Capture](#enabling-smart-capture) below.
 
 ## Project Structure
 
@@ -65,9 +88,10 @@ gbg-go-ios-reference/
 │   ├── Sources/
 │   │   ├── App/                    # App entry point, navigation
 │   │   ├── Journey/                # BridgeWebView integration
-│   │   ├── Capture/                # Stub camera views
+│   │   ├── Capture/                # Smart Capture SDK wrappers (Part 2)
 │   │   ├── Settings/               # Configuration UI
 │   │   └── Extensions/             # Bridge handler setup
+│   ├── Frameworks/                 # Drop Smart Capture SDKs here
 │   └── Resources/                  # Assets, Info.plist
 │
 └── docs/                           # Development notes
@@ -96,11 +120,68 @@ gbg-go-ios-reference/
 4. The server returns the URL to the iOS app
 5. The app loads the URL in a `BridgeWebView`
 6. The web journey requests native capabilities via the bridge protocol
-7. The app presents stub camera views and returns results
+7. The app presents camera views and returns results:
+   - **With Smart Capture:** Real document scanning and face capture with liveness
+   - **Without Smart Capture:** Stub camera views (plain photos / placeholders)
+
+## Enabling Smart Capture
+
+The Smart Capture SDKs are **not included** in this repository. To enable real document scanning and face capture with liveness:
+
+### 1. Obtain the frameworks
+
+Contact your GBG account representative to obtain the following XCFramework bundles:
+
+| Framework | Purpose |
+|-----------|---------|
+| `Document.xcframework` | Document scanning with guided capture |
+| `FaceCamera.xcframework` | Face capture with liveness detection |
+| `IDLiveFaceCamera.xcframework` | Runtime dependency of FaceCamera |
+| `IDLiveFaceIAD.xcframework` | Runtime dependency of FaceCamera |
+
+### 2. Add frameworks to the project
+
+1. Place all four `.xcframework` bundles in `GBGGoReference/Frameworks/`
+2. In Xcode, select the **GBGGoReference** target
+3. Go to **General > Frameworks, Libraries, and Embedded Content**
+4. Click **+**, then **Add Other > Add Files** and select each framework
+5. Set each to **Embed & Sign**
+
+### 3. Enable the compiler flag
+
+1. In Xcode, select the **GBGGoReference** target
+2. Go to **Build Settings** (make sure "All" is selected, not "Basic")
+3. Search for **Active Compilation Conditions** (`SWIFT_ACTIVE_COMPILATION_CONDITIONS`)
+4. Add `SMART_CAPTURE_ENABLED` to both Debug and Release
+
+### 4. Build and run on device
+
+Smart Capture SDKs require camera hardware — build and run on a **physical iOS device**:
+
+```bash
+# Or press Cmd+R in Xcode with a device selected
+xcodebuild \
+  -project GBGGoReference/GBGGoReference.xcodeproj \
+  -scheme GBGGoReference \
+  -destination 'generic/platform=iOS' \
+  build
+```
+
+On Simulator, the app automatically falls back to stub camera views even with the flag enabled.
+
+## Without Smart Capture
+
+The app builds and runs without the Smart Capture SDKs — it behaves identically to the [Part 1 reference](../../tree/main) on `main`. This is the default state of the project:
+
+- No frameworks needed in `Frameworks/`
+- No compiler flags to set
+- Stubs work on both Simulator and device
+- Full bridge protocol flow is exercised end-to-end
 
 ## Building from the Command Line
 
 ```bash
+# Default (stubs only)
 xcodebuild \
   -project GBGGoReference/GBGGoReference.xcodeproj \
   -scheme GBGGoReference \
@@ -118,8 +199,20 @@ When the GBGBridge SDK is published via SPM, replace the local package dependenc
 4. Select your version requirement (e.g., "Up to Next Minor" from `1.0.0`)
 5. Delete the `Packages/GBGBridge/` directory
 
+## Branch Structure
+
+| Branch | Content |
+|--------|---------|
+| `main` | Part 1 — Core bridge integration with stub camera views |
+| `part-2-smart-capture` | Part 2 — Smart Capture SDK integration (this branch) |
+
+To see exactly what Part 2 adds, diff the branches:
+
+```bash
+git diff main..part-2-smart-capture
+```
+
 ## Next Steps
 
 - [GBGBridge iOS Documentation](https://github.com/gbgplc/gbg-bridge-ios) — Full SDK reference
-- **SmartCapture SDK Integration** — Replace stub camera views with production capture (coming soon)
 - **Android Reference** — Equivalent reference build for Android (coming soon)
