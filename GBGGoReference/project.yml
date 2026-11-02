@@ -15,7 +15,8 @@ settings:
 
 packages:
   GBGBridge:
-    path: ../Packages/GBGBridge
+    url: https://github.com/gbgplc/gbg-go-ios-sdk.git
+    from: 1.2.0
 
 targets:
   GBGGoReference:

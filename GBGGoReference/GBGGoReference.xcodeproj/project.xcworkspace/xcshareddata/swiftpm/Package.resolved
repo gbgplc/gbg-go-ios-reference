@@ -1,0 +1,15 @@
+{
+  "originHash" : "26d88b68c282057b06d0003ead76a8a3ca1ba43a9eae5c94b1328d7eff2bedad",
+  "pins" : [
+    {
+      "identity" : "gbg-go-ios-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/gbgplc/gbg-go-ios-sdk.git",
+      "state" : {
+        "revision" : "0d19a48f038688c2094c12a9c13055b3e92710d7",
+        "version" : "1.2.0"
+      }
+    }
+  ],
+  "version" : 3
+}
