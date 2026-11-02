@@ -22,7 +22,6 @@
 		C61C0E75DAA320C2B056E00B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		CA78C84476BB13006B96F6C8 /* GBGGoReferenceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GBGGoReferenceApp.swift; sourceTree = "<group>"; };
 		D170D6F7EC9CBCA151497733 /* GBGGoReference.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GBGGoReference.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F02DEA5B6E80155AC5890D6E /* GBGBridge */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GBGBridge; path = ../Packages/GBGBridge; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,7 +48,6 @@
 		29D1656A2564F8CA8D5FA452 = {
 			isa = PBXGroup;
 			children = (
-				DB865B92F255A1E5DF079A16 /* Packages */,
 				DF206A62170AE4114D1E1381 /* Sources */,
 				A9A5FA6D3BDDF8C972D07998 /* Products */,
 			);
@@ -92,14 +90,6 @@
 			children = (
 			);
 			path = Extensions;
-			sourceTree = "<group>";
-		};
-		DB865B92F255A1E5DF079A16 /* Packages */ = {
-			isa = PBXGroup;
-			children = (
-				F02DEA5B6E80155AC5890D6E /* GBGBridge */,
-			);
-			name = Packages;
 			sourceTree = "<group>";
 		};
 		DF206A62170AE4114D1E1381 /* Sources */ = {
@@ -161,7 +151,7 @@
 			mainGroup = 29D1656A2564F8CA8D5FA452;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				5F9EAAC09257DE0D23C2B4E2 /* XCLocalSwiftPackageReference "../Packages/GBGBridge" */,
+				5F9EAAC09257DE0D23C2B4E2 /* XCRemoteSwiftPackageReference "gbg-go-ios-sdk" */,
 			);
 			projectDirPath = "";
 			projectRoot = "";
@@ -371,16 +361,21 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		5F9EAAC09257DE0D23C2B4E2 /* XCLocalSwiftPackageReference "../Packages/GBGBridge" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../Packages/GBGBridge;
+/* Begin XCRemoteSwiftPackageReference section */
+		5F9EAAC09257DE0D23C2B4E2 /* XCRemoteSwiftPackageReference "gbg-go-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gbgplc/gbg-go-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.2.0;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		42CF5DF8EC75DF8044C6FCE9 /* GBGBridge */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 5F9EAAC09257DE0D23C2B4E2 /* XCRemoteSwiftPackageReference "gbg-go-ios-sdk" */;
 			productName = GBGBridge;
 		};
 /* End XCSwiftPackageProductDependency section */

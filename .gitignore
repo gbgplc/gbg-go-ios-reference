@@ -1,14 +1,17 @@
 # Xcode
 DerivedData/
 *.xcuserdata
-*.xcworkspace
 xcuserdata/
 build/
+# Ignore workspace contents except the shared SwiftPM lockfile (Package.resolved)
+*.xcworkspace/*
+!*.xcworkspace/xcshareddata/
+*.xcworkspace/xcshareddata/*
+!*.xcworkspace/xcshareddata/swiftpm/
 
 # Swift Package Manager
 .build/
 .swiftpm/
-Packages/GBGBridge/.build/
 
 # Node.js
 node_modules/
