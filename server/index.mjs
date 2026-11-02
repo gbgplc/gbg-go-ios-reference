@@ -29,6 +29,16 @@ const PORT = process.env.PORT || 3000;
 const SERVER_IDX = parseInt(process.env.GO_SERVER_IDX || "0", 10);
 const REGIONS = ["EU", "US", "AU"];
 const SERVER_URL = process.env.GO_SERVER_URL || undefined;
+const AUTH_URL = process.env.GO_AUTH_URL || undefined;
+
+// Captain calls: a custom base URL when GO_SERVER_URL is set, otherwise the
+// regional production server selected by GO_SERVER_IDX.
+const CAPTAIN_OPTS = SERVER_URL ? { serverURL: SERVER_URL } : { serverIdx: SERVER_IDX };
+
+// Token calls: the SDK targets the production auth host by default. Set
+// GO_AUTH_URL only when your environment issues tokens from a different host
+// (for example a non-production tenant).
+const AUTH_OPTS = AUTH_URL ? { serverURL: AUTH_URL } : {};
 
 const app = express();
 app.use(express.json());
@@ -41,13 +51,16 @@ let customerAccessToken = null;
 
 async function authenticate() {
   const go = new Go();
-  const auth = await go.tokens.generate({
-    clientId: process.env.GO_CLIENT_ID,
-    clientSecret: process.env.GO_CLIENT_SECRET,
-    username: process.env.GO_USERNAME,
-    password: process.env.GO_PASSWORD,
-    grantType: "password",
-  });
+  const auth = await go.tokens.generate(
+    {
+      clientId: process.env.GO_CLIENT_ID,
+      clientSecret: process.env.GO_CLIENT_SECRET,
+      username: process.env.GO_USERNAME,
+      password: process.env.GO_PASSWORD,
+      grantType: "password",
+    },
+    AUTH_OPTS
+  );
   customerAccessToken = auth.accessToken;
   console.log(`Authenticated with GBG Go (${REGIONS[SERVER_IDX]} region)`);
 }
@@ -95,7 +108,7 @@ app.post("/api/journey/start", async (req, res) => {
       });
     }
 
-    const serverOpts = SERVER_URL ? { serverURL: SERVER_URL } : {};
+    const serverOpts = CAPTAIN_OPTS;
     const client = new Go({ customerAccess: customerAccessToken });
 
     // Step 1: Start a journey session
