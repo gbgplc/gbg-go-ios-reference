@@ -1,6 +1,6 @@
 # GBG Go iOS Reference
 
-A complete, runnable reference integration of the GBG Go identity verification journey in an iOS app using the GBGBridge SDK.
+A complete, runnable reference integration of the GBG Go identity verification journey in an iOS app using the [GBGBridge iOS SDK](https://github.com/gbgplc/gbg-go-ios-sdk) (v1.2.0, added via Swift Package Manager).
 
 This project demonstrates:
 - Obtaining a journey URL from your backend using the GBG Go Core SDK
@@ -10,7 +10,7 @@ This project demonstrates:
 
 ## Prerequisites
 
-- **Xcode 15+** (Swift 5.9)
+- **Xcode 16.2+** (the GBGBridge binary is built with Swift 6.0.3)
 - **iOS 16.0+** device or simulator
 - **Node.js 18+** (for the companion server)
 - **GBG Go account** with API credentials (client ID, client secret, username, password)
@@ -48,7 +48,7 @@ open GBGGoReference/GBGGoReference.xcodeproj
 
 ### 5. Build and run
 
-Select an iOS Simulator (or device) and press **Cmd+R**. The app will launch with a settings screen where you can configure the companion server URL and start a journey.
+Xcode resolves the GBGBridge package from GitHub on first open (pinned to 1.2.0 in `Package.resolved`). Select an iOS Simulator (or device) and press **Cmd+R**. The app will launch with a settings screen where you can configure the companion server URL and start a journey.
 
 ## Project Structure
 
@@ -59,15 +59,12 @@ gbg-go-ios-reference/
 │   ├── .env.example                # Credential template
 │   └── README.md                   # Server setup guide
 │
-├── Packages/GBGBridge/             # GBGBridge SDK (local Swift Package)
-│
 ├── GBGGoReference/                 # iOS app
+│   ├── GBGGoReference.xcodeproj    # SPM dependency on gbg-go-ios-sdk (GBGBridge 1.2.0)
 │   ├── Sources/
 │   │   ├── App/                    # App entry point, navigation
-│   │   ├── Journey/                # BridgeWebView integration
-│   │   ├── Capture/                # Stub camera views
-│   │   ├── Settings/               # Configuration UI
-│   │   └── Extensions/             # Bridge handler setup
+│   │   ├── Journey/                # BridgeWebView integration + stub camera swap points
+│   │   └── Settings/               # Configuration UI
 │   └── Resources/                  # Assets, Info.plist
 │
 └── docs/                           # Development notes
@@ -104,22 +101,25 @@ gbg-go-ios-reference/
 xcodebuild \
   -project GBGGoReference/GBGGoReference.xcodeproj \
   -scheme GBGGoReference \
-  -destination 'platform=iOS Simulator,name=iPhone 16' \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
   build
 ```
 
-## Switching to the Published SDK
+## SDK Dependency
 
-When the GBGBridge SDK is published via SPM, replace the local package dependency:
+The GBGBridge SDK is pulled in as a Swift Package Manager dependency on [`gbgplc/gbg-go-ios-sdk`](https://github.com/gbgplc/gbg-go-ios-sdk), distributed as a pre-built XCFramework. The project uses "Up to Next Major Version" from `1.2.0`, and `Package.resolved` pins the exact release.
 
-1. In Xcode, remove the local `GBGBridge` package reference
-2. Go to **File > Add Package Dependencies**
-3. Enter the GBGBridge SPM URL: `https://github.com/gbgplc/gbg-bridge-ios.git`
-4. Select your version requirement (e.g., "Up to Next Minor" from `1.0.0`)
-5. Delete the `Packages/GBGBridge/` directory
+To move to a newer release:
+
+1. In Xcode, select the project, then **Package Dependencies**
+2. Edit the `gbg-go-ios-sdk` rule's minimum version to the new release
+3. **File > Packages > Update to Latest Package Versions**
+4. Commit the updated `project.pbxproj` and `Package.resolved`
+
+Release notes and checksums are on the [SDK releases page](https://github.com/gbgplc/gbg-go-ios-sdk/releases).
 
 ## Next Steps
 
-- [GBGBridge iOS Documentation](https://github.com/gbgplc/gbg-bridge-ios) — Full SDK reference
+- [GBGBridge iOS SDK](https://github.com/gbgplc/gbg-go-ios-sdk): SDK repository and releases
 - **SmartCapture SDK Integration** — Replace stub camera views with production capture (coming soon)
 - **Android Reference** — Equivalent reference build for Android (coming soon)

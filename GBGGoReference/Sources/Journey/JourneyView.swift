@@ -121,7 +121,7 @@ struct JourneyView: View {
 
     /// The selfie camera view, presented as a full-screen cover.
     ///
-    /// SWAP POINT: Replace StubSelfieCameraView with the ID R&D face liveness SDK
+    /// SWAP POINT: Replace StubSelfieCameraView with the SmartCapture face liveness SDK
     /// view for production. The completion callbacks remain the same — only the view changes.
     private var selfieCameraView: some View {
         StubSelfieCameraView(

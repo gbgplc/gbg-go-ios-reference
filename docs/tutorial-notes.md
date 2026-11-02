@@ -7,7 +7,7 @@ Internal notes for transforming this reference build into the end-to-end linear 
 | Reference Build Step | Tutorial Section | Key Content |
 |---|---|---|
 | Server setup | "Set Up the Backend" | Install Node.js, clone repo, configure `.env`, start server. Show the curl test. |
-| Xcode project creation | "Create Your iOS Project" | File > New Project in Xcode. Add GBGBridge via SPM. Configure Info.plist. |
+| Xcode project creation | "Create Your iOS Project" | File > New Project in Xcode. Add GBGBridge via SPM (`https://github.com/gbgplc/gbg-go-ios-sdk`, from 1.2.0). Configure Info.plist. |
 | GBGGoReferenceApp.swift | "App Entry Point" | Standard `@main` — nothing special needed here. Brief mention. |
 | RootView.swift | "Navigation Setup" | NavigationStack with programmatic path. Explain the flow. |
 | SetupView.swift | "Configuration Screen" | Form with server URL and resource ID. AppStorage for persistence. |
