@@ -23,6 +23,9 @@ Edit `.env` with your credentials:
 | `GO_USERNAME` | API username (email) |
 | `GO_PASSWORD` | API password |
 | `GO_SERVER_IDX` | Regional server: `0` = EU, `1` = US, `2` = AU |
+| `GO_RESOURCE_ID` | Default journey resource ID (`<id>@<version>`) |
+| `GO_SERVER_URL` | Optional. Custom Captain base URL (with `/v2/captain`); overrides `GO_SERVER_IDX` |
+| `GO_AUTH_URL` | Optional. Token endpoint host, if not the production auth host |
 | `PORT` | Server port (default: `3000`) |
 
 ## Running
