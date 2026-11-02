@@ -52,6 +52,8 @@ struct SmartCaptureDocumentView: View {
                     )
                 case .failure(let failure):
                     onFailed(failure.message)
+                @unknown default:
+                    onFailed("The document scanner returned a result this app does not recognise")
                 }
             }
     }

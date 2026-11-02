@@ -25,6 +25,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NFCReaderUsageDescription</key>
+	<string>NFC is used to read the chip in your passport.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is needed to capture identity documents and selfie photos for verification.</string>
 	<key>UILaunchScreen</key>
@@ -32,6 +34,10 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>A0000002471001</string>
 	</array>
 </dict>
 </plist>

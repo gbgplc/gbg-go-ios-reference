@@ -69,11 +69,12 @@ Part 2 assumes the reader has completed Part 1 or cloned the reference repo. The
 | Reference Build Step | Tutorial Section | Key Content |
 |---|---|---|
 | Branch checkout | "Start from Part 1" | `git checkout part-2-smart-capture`. Explain the branch structure. Brief diff overview. |
-| Obtain SDKs | "Prerequisites: Smart Capture SDKs" | **Critical section.** Explain that SDKs are not in the repo. Contact GBG representative. List all 4 frameworks and their purposes. |
+| Obtain SDKs | "Prerequisites: Smart Capture SDKs" | **Critical section.** Explain that SDKs are not in the repo. Contact GBG representative. List all 6 frameworks and their purposes, plus the two exact-version Swift packages (Lottie for Document, OpenSSL for OzoneNFC). |
 | Framework setup | "Add the Smart Capture SDKs" | Step-by-step: place in `Frameworks/`, drag into Xcode, Embed & Sign. Screenshots of Xcode UI. |
 | Compiler flag | "Enable the Compiler Flag" | Add `SMART_CAPTURE_ENABLED` to Active Compilation Conditions. Explain what the flag does. Screenshot of Build Settings. |
 | SmartCaptureDocumentView.swift | "Document Capture with SmartCapture" | Walk through the wrapper view. Explain `DocumentSDK`, `DocumentScannerConfig`, auto-capture toggle, `onReceive` result handling. Compare with the stub. |
 | SmartCaptureFaceView.swift | "Face Capture with Liveness" | Walk through the delegate pattern. Explain `FaceCameraSDK.controllerSwiftUIWrapper`, `FaceCameraListenable` protocol, biometric blobs (encrypted vs unencrypted). Compare with the stub. |
+| SmartCaptureChipReaderView.swift | "Passport Chip Reading" | The `host.nfcRead` slot (GBGBridge 1.2.0). What the app does (run the Ozone reader, hand back files and checks) versus what the SDK does (validate the request, busy/unsupported, shape the response). `deviceCanRead`. The NFC capability and Info.plist keys. Sheet rather than full-screen cover. No stub: unsupported without the SDK. Link to the Passport Chip Reading section of Capability Handling. |
 | JourneyView.swift changes | "The Swap Pattern" | Show the `#if SMART_CAPTURE_ENABLED && !targetEnvironment(simulator)` conditional. Explain why simulator falls back to stubs. Highlight that nothing else in the bridge integration changed. |
 | CameraDetector | "Camera Permissions" | Explain `CameraDetector.check()` and `permissionState` population. Why this matters for capability.query responses. |
 | Run on device | "Test on a Physical Device" | Start server, configure IP, run on device. Expected: SmartCapture document scanner, face camera with liveness overlay. |
@@ -102,6 +103,9 @@ Part 2 assumes the reader has completed Part 1 or cloned the reference repo. The
 3. **Simulator with flag**: Even with the flag, Simulator uses stubs. This is by design — SmartCapture SDKs require camera hardware. Don't file a bug.
 4. **Framework signing**: All frameworks must be set to **Embed & Sign**, not "Embed Without Signing" or "Do Not Embed". Incorrect embedding causes runtime crashes.
 5. **Image format**: The Document SDK returns raw image data. The mimeType defaults to `"image/jpeg"` if not specified in the `DocumentCaptureResult` constructor.
+6. **Smart Capture 1.7.0 dependencies**: Document needs `IDSCamera.xcframework` and Lottie; OzoneNFC needs OpenSSL. Missing any of them is a "Library not loaded" crash at launch. Pin Lottie and OpenSSL to the exact versions the SDKs were built against.
+7. **NFC capability missing**: Without the Near Field Communication Tag Reading capability the reader session fails to start. Without the `A0000002471001` select identifier in Info.plist, iOS cannot select the passport application and every read fails.
+8. **Chip reading on iPad or Simulator**: `NFCTagReaderSession.readingAvailable` is false, so the app reports chip reading as unsupported and the journey offers an alternative. Expected, not a bug.
 
 ## Tutorial Tone
 

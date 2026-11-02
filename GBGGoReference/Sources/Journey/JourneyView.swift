@@ -30,7 +30,18 @@
 //
 // On Simulator, stubs are always used regardless of the flag (no camera hardware).
 // Without the flag, the app behaves identically to Part 1 (stubs only).
+//
+// PASSPORT CHIP READING (NFC):
+//
+// GBGBridge 1.2.0 adds a third typed slot, host.nfcRead, for reading the chip in a
+// passport. With SMART_CAPTURE_ENABLED on a real device, SmartCaptureChipReaderView
+// runs the SmartCapture Ozone reader and hands back what it read. There is no stub:
+// without the flag (or on Simulator) the slot has no handler, so the SDK reports chip
+// reading as unsupported and the web journey offers its own alternative.
 
+#if SMART_CAPTURE_ENABLED && !targetEnvironment(simulator)
+import CoreNFC
+#endif
 import GBGBridge
 import SwiftUI
 
@@ -46,6 +57,7 @@ struct JourneyView: View {
     // Presentation state for camera views, driven by the capture slot's activeRequest.
     @State private var showDocumentCamera = false
     @State private var showSelfieCamera = false
+    @State private var showChipReader = false
 
     var body: some View {
         // TUTORIAL NOTE: BridgeWebView wraps WKWebView with the bridge pre-configured.
@@ -84,6 +96,17 @@ struct JourneyView: View {
             .onChange(of: host.selfieCapture.activeRequest?.correlationId) { _ in
                 showSelfieCamera = host.selfieCapture.activeRequest != nil
             }
+            // PART 2 (NFC): present the chip reader while a chip read is active. A sheet
+            // rather than a full-screen cover, so the person can always swipe it away;
+            // onDismiss answers the read as cancelled (a no-op when the read already finished).
+            .onChange(of: host.nfcRead.activeRequest) { request in
+                showChipReader = request != nil
+            }
+            .sheet(isPresented: $showChipReader, onDismiss: {
+                host.nfcRead.cancelIfBusy(reason: "User dismissed the chip reader")
+            }) {
+                chipReaderView
+            }
     }
 
     // MARK: - Handler Configuration
@@ -116,6 +139,18 @@ struct JourneyView: View {
             guard let host else { return .cancelled(reason: "Host deallocated") }
             return await host.selfieCapture.awaitCompletion()
         }
+
+        // PART 2 (NFC): the chip-reading slot, only when the Ozone reader is available.
+        // The SDK does not link Core NFC, so the app says whether this device can read a
+        // chip. deviceCanRead defaults to false, which reports chip reading as unsupported.
+        // Setting the handler is what advertises `document.nfc` to the web journey.
+        #if SMART_CAPTURE_ENABLED && !targetEnvironment(simulator)
+        host.nfcRead.deviceCanRead = { NFCTagReaderSession.readingAvailable }
+        host.nfcRead.handler = { [weak host] _ in
+            guard let host else { return .cancelled(reason: "Host deallocated") }
+            return await host.nfcRead.awaitCompletion()
+        }
+        #endif
     }
 
     // MARK: - Camera Views
@@ -197,5 +232,26 @@ struct JourneyView: View {
             )
             #endif
         }
+    }
+
+    /// The passport chip reader, presented as a sheet.
+    ///
+    /// With SMART_CAPTURE_ENABLED on a real device this runs the SmartCapture Ozone
+    /// reader, which draws the whole chip-read experience. The SDK ships no stub for
+    /// chip reading, so otherwise this is never presented: the slot has no handler and
+    /// the journey is told chip reading is unsupported.
+    @ViewBuilder
+    private var chipReaderView: some View {
+        #if SMART_CAPTURE_ENABLED && !targetEnvironment(simulator)
+        if let request = host.nfcRead.activeRequest {
+            SmartCaptureChipReaderView(request: request) { result in
+                host.nfcRead.complete(result)
+                showChipReader = false
+            }
+            .ignoresSafeArea()
+        }
+        #else
+        EmptyView()
+        #endif
     }
 }

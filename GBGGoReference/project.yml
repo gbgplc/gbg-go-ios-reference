@@ -42,5 +42,9 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         NSCameraUsageDescription: "Camera access is needed to capture identity documents and selfie photos for verification."
+        NFCReaderUsageDescription: "NFC is used to read the chip in your passport."
+        # ISO 7816 application identifier of the passport (ICAO 9303 LDS1); required for chip reading.
+        com.apple.developer.nfc.readersession.iso7816.select-identifiers:
+          - A0000002471001
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

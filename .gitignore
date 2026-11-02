@@ -9,6 +9,9 @@ build/
 *.xcworkspace/xcshareddata/*
 !*.xcworkspace/xcshareddata/swiftpm/
 
+# Smart Capture vendor frameworks (obtained from GBG, never committed)
+GBGGoReference/Frameworks/*.xcframework
+
 # Swift Package Manager
 .build/
 .swiftpm/

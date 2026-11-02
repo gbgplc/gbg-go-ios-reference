@@ -13,6 +13,9 @@
 		E2FE2B3742BA8ADC1257C176 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BA02E784C58D850494D1EC8 /* SetupView.swift */; };
 		EADDA488DAE5F391A605F4DD /* JourneyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037EDFD58B7FA50D11719B0F /* JourneyService.swift */; };
 		FD6C120C39BB7F3929E83848 /* GBGBridge in Frameworks */ = {isa = PBXBuildFile; productRef = 42CF5DF8EC75DF8044C6FCE9 /* GBGBridge */; };
+		A1C0DE0000000000000000B1 /* SmartCaptureDocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE0000000000000000D1 /* SmartCaptureDocumentView.swift */; };
+		A1C0DE0000000000000000B2 /* SmartCaptureFaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE0000000000000000D2 /* SmartCaptureFaceView.swift */; };
+		A1C0DE0000000000000000B3 /* SmartCaptureChipReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE0000000000000000D3 /* SmartCaptureChipReaderView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +25,9 @@
 		C61C0E75DAA320C2B056E00B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		CA78C84476BB13006B96F6C8 /* GBGGoReferenceApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GBGGoReferenceApp.swift; sourceTree = "<group>"; };
 		D170D6F7EC9CBCA151497733 /* GBGGoReference.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GBGGoReference.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1C0DE0000000000000000D1 /* SmartCaptureDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCaptureDocumentView.swift; sourceTree = "<group>"; };
+		A1C0DE0000000000000000D2 /* SmartCaptureFaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCaptureFaceView.swift; sourceTree = "<group>"; };
+		A1C0DE0000000000000000D3 /* SmartCaptureChipReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartCaptureChipReaderView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +62,9 @@
 		54F2D0B60F0199CA4D029A99 /* Capture */ = {
 			isa = PBXGroup;
 			children = (
+				A1C0DE0000000000000000D1 /* SmartCaptureDocumentView.swift */,
+				A1C0DE0000000000000000D2 /* SmartCaptureFaceView.swift */,
+				A1C0DE0000000000000000D3 /* SmartCaptureChipReaderView.swift */,
 			);
 			path = Capture;
 			sourceTree = "<group>";
@@ -167,6 +176,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B5031400CD507F56E1E9397E /* GBGGoReferenceApp.swift in Sources */,
+				A1C0DE0000000000000000B1 /* SmartCaptureDocumentView.swift in Sources */,
+				A1C0DE0000000000000000B2 /* SmartCaptureFaceView.swift in Sources */,
+				A1C0DE0000000000000000B3 /* SmartCaptureChipReaderView.swift in Sources */,
 				EADDA488DAE5F391A605F4DD /* JourneyService.swift in Sources */,
 				CEAB9A30035C652B69027A12 /* JourneyView.swift in Sources */,
 				2ACF3F3F54576A708DD583E9 /* RootView.swift in Sources */,

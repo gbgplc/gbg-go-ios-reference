@@ -9,6 +9,7 @@ This project demonstrates:
 - **Replacing stub camera views with Smart Capture SDKs** using a compile-time flag
 - **Document scanning** with guided capture, auto-crop, and quality scoring (`Document.xcframework`)
 - **Face capture with liveness** detection and encrypted biometric blobs (`FaceCamera.xcframework`)
+- **Passport chip reading** over NFC through the GBGBridge `nfcRead` slot (`OzoneNFC.xcframework`)
 - Conditional compilation so the app works with or without the SDKs
 - Simulator fallback to stubs (Smart Capture SDKs require camera hardware)
 
@@ -20,7 +21,9 @@ The diff between `main` and this branch is intentionally small — the bridge ar
 |------|--------|
 | `Sources/Capture/SmartCaptureDocumentView.swift` | New — thin wrapper around Document SDK |
 | `Sources/Capture/SmartCaptureFaceView.swift` | New — thin wrapper around FaceCamera SDK |
-| `Sources/Journey/JourneyView.swift` | Modified — conditional compile at the swap points |
+| `Sources/Capture/SmartCaptureChipReaderView.swift` | New: thin wrapper around the Ozone NFC reader, mapping its result to `NfcReadResult` |
+| `Sources/Journey/JourneyView.swift` | Modified: conditional compile at the swap points, plus the `nfcRead` slot and chip reader sheet |
+| `Resources/Info.plist` | Modified: NFC usage description and the passport application identifier |
 | `Frameworks/` | New — placeholder for Smart Capture SDK frameworks |
 
 The handler setup, bridge wiring, `awaitCompletion()`/`complete()` pattern, server code, and all other files are unchanged.
@@ -32,6 +35,7 @@ The handler setup, bridge wiring, `awaitCompletion()`/`complete()` pattern, serv
 - **Node.js 18+** (for the companion server)
 - **GBG Go account** with API credentials (client ID, client secret, username, password)
 - **Smart Capture SDKs** (optional — obtained from your GBG account representative)
+- **An iPhone with NFC** for chip reading (iPads and the Simulator have no chip reader)
 
 ## Quick Start
 
@@ -119,42 +123,60 @@ gbg-go-ios-reference/
 5. The app loads the URL in a `BridgeWebView`
 6. The web journey requests native capabilities via the bridge protocol
 7. The app presents camera views and returns results:
-   - **With Smart Capture:** Real document scanning and face capture with liveness
-   - **Without Smart Capture:** Stub camera views (plain photos / placeholders)
+   - **With Smart Capture:** Real document scanning, face capture with liveness, and passport chip reading
+   - **Without Smart Capture:** Stub camera views (plain photos / placeholders); chip reading is reported as unsupported
 
 ## Enabling Smart Capture
 
-The Smart Capture SDKs are **not included** in this repository. To enable real document scanning and face capture with liveness:
+The Smart Capture SDKs are **not included** in this repository. To enable real document scanning, face capture with liveness and passport chip reading:
 
 ### 1. Obtain the frameworks
 
-Contact your GBG account representative to obtain the following XCFramework bundles:
+Contact your GBG account representative to obtain the Smart Capture iOS XCFramework bundles (this reference was checked against Smart Capture 1.7.0):
 
 | Framework | Purpose |
 |-----------|---------|
 | `Document.xcframework` | Document scanning with guided capture |
+| `IDSCamera.xcframework` | Runtime dependency of Document |
 | `FaceCamera.xcframework` | Face capture with liveness detection |
 | `IDLiveFaceCamera.xcframework` | Runtime dependency of FaceCamera |
 | `IDLiveFaceIAD.xcframework` | Runtime dependency of FaceCamera |
+| `OzoneNFC.xcframework` | Passport chip reading over NFC |
+
+Two open-source packages are also required at runtime. Add them with **File > Add Package Dependencies**, pinned to the exact versions the SDKs were built against:
+
+| Package | Version | Needed by |
+|---------|---------|-----------|
+| `https://github.com/airbnb/lottie-spm.git` | `4.6.0` (exact) | Document |
+| `https://github.com/krzyzanowskim/OpenSSL.git` | `3.6.3000` (exact) | OzoneNFC |
 
 ### 2. Add frameworks to the project
 
-1. Place all four `.xcframework` bundles in `GBGGoReference/Frameworks/`
+1. Place all six `.xcframework` bundles in `GBGGoReference/Frameworks/` (the folder is gitignored for `.xcframework` bundles)
 2. In Xcode, select the **GBGGoReference** target
 3. Go to **General > Frameworks, Libraries, and Embedded Content**
 4. Click **+**, then **Add Other > Add Files** and select each framework
 5. Set each to **Embed & Sign**
 
-### 3. Enable the compiler flag
+### 3. Add the NFC capability
+
+Chip reading uses Core NFC, which needs an entitlement:
+
+1. In Xcode, select the **GBGGoReference** target, then **Signing & Capabilities**
+2. Click **+ Capability** and add **Near Field Communication Tag Reading**
+
+The two Info.plist entries chip reading needs (`NFCReaderUsageDescription` and the passport application identifier `A0000002471001` under `com.apple.developer.nfc.readersession.iso7816.select-identifiers`) are already in `Resources/Info.plist`.
+
+### 4. Enable the compiler flag
 
 1. In Xcode, select the **GBGGoReference** target
 2. Go to **Build Settings** (make sure "All" is selected, not "Basic")
 3. Search for **Active Compilation Conditions** (`SWIFT_ACTIVE_COMPILATION_CONDITIONS`)
 4. Add `SMART_CAPTURE_ENABLED` to both Debug and Release
 
-### 4. Build and run on device
+### 5. Build and run on device
 
-Smart Capture SDKs require camera hardware — build and run on a **physical iOS device**:
+Smart Capture SDKs require camera hardware, and chip reading needs an NFC reader. Build and run on a **physical iPhone**:
 
 ```bash
 # Or press Cmd+R in Xcode with a device selected
@@ -165,7 +187,16 @@ xcodebuild \
   build
 ```
 
-On Simulator, the app automatically falls back to stub camera views even with the flag enabled.
+On Simulator, the app automatically falls back to stub camera views even with the flag enabled, and chip reading is reported as unsupported.
+
+### How chip reading works
+
+GBGBridge 1.2.0 adds a third typed slot, `host.nfcRead`, alongside `documentCapture` and `selfieCapture`. It follows the same `awaitCompletion()` / `complete()` pattern. The app does two things:
+
+- Tells the SDK whether this device can read a chip: `host.nfcRead.deviceCanRead = { NFCTagReaderSession.readingAvailable }`. The SDK does not link Core NFC, so without this the slot reports chip reading as unsupported.
+- Runs the Ozone reader when a request arrives and hands back what it read. `SmartCaptureChipReaderView` builds the reader from the request's document number, date of birth and date of expiry, then maps the result: every data group the chip returned as `NfcReadFile`s, and the BAC, PACE, chip authentication, active authentication and passive authentication outcomes as `NfcAuthCheck`s.
+
+The SDK does the rest: validating the request, answering busy and unsupported states, and shaping the response the web journey expects. The reader is presented as a sheet rather than a full-screen cover, so the person can always swipe it away; dismissing it answers the read as cancelled.
 
 ## Without Smart Capture
 
@@ -174,6 +205,7 @@ The app builds and runs without the Smart Capture SDKs — it behaves identicall
 - No frameworks needed in `Frameworks/`
 - No compiler flags to set
 - Stubs work on both Simulator and device
+- Chip reading is reported as unsupported, so the web journey offers its own alternative (there is no stub reader)
 - Full bridge protocol flow is exercised end-to-end
 
 ## Building from the Command Line
